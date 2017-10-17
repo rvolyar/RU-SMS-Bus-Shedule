@@ -1,11 +1,24 @@
 {
-  "name": "chat-example",
+  "name": "ru-bus",
   "version": "0.0.0",
-  "description": "A chat example to showcase how to use `socket.io` with a static `express` server with `async` for control flow.",
+  "description": "RU-bus sms app",
   "main": "server.js",
-  "repository": "",
-  "author": "Mostafa Eweda <mo.eweda@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rvolyar/RU-SMS-Bus-Shedule.git"
+  },
+  "author": "Ruslan Volyar <rvolyar@gmail.com>",
   "dependencies": {
-    "express": "^3.21.2"
-  }
+    "express": "^3.21.2",
+    "twilio": "^3.8.1"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {},
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rvolyar/RU-SMS-Bus-Shedule/issues"
+  },
+  "homepage": "https://github.com/rvolyar/RU-SMS-Bus-Shedule#readme"
 }
