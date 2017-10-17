@@ -9,6 +9,7 @@
   },
   "author": "Ruslan Volyar <rvolyar@gmail.com>",
   "dependencies": {
+    "dotenv": "^4.0.0",
     "express": "^3.21.2",
     "twilio": "^3.8.1"
   },
