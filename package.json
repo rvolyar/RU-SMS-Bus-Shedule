@@ -9,6 +9,7 @@
   },
   "author": "Ruslan Volyar <rvolyar@gmail.com>",
   "dependencies": {
+    "asyncawait": "^1.0.6",
     "body-parser": "^1.18.2",
     "dotenv": "^4.0.0",
     "express": "^3.21.2",
