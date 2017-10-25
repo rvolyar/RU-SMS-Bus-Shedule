@@ -13,6 +13,8 @@
     "dotenv": "^4.0.0",
     "express": "^3.21.2",
     "nextbus": "0.0.7",
+    "nextbusjs": "^1.0.1",
+    "request": "^2.83.0",
     "twilio": "^3.8.1"
   },
   "scripts": {
