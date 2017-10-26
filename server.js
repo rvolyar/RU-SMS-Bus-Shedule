@@ -18,8 +18,9 @@ const await = require('asyncawait/await');
 
 // busName: String
 // callback: (Exception, Object) => void
+const rutgersRouteConfigURL = 'https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt';
 const busRequest = (busName, callback) => {
-  const rutgersRouteConfigUrl = 'https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt';
+
   request(rutgersRouteConfigURL, (error, response, body) => {
     if (error) {
       console.log('error:', error);
@@ -27,7 +28,7 @@ const busRequest = (busName, callback) => {
     }
 
     if (response.statusCode) {
-      console.log('statusCode:', response);
+      //console.log('statusCode:', response);
     }
 
     rutgers.setAgencyCache(JSON.parse(body), 'rutgers');
@@ -48,11 +49,22 @@ app.post('/message', function(req, res) {
       console.log(err);
       return;
     }
-    
-    twiml.message(`Message Recieved! Bus + data + :\n ${data}`);  }  
+    console.log("Message was " + busName);
+    console.log(data);
+    let formatted ="";
+    for(var i in data){
+      formatted+=data[i].title + '\n';
+      for(var x in data[i].predictions){
+        formatted +=data[i].predictions[x] + ",";
+      }
+       formatted+="\n";
+    }
+    console.log(formatted);
+    twiml.message(`Bus ${busName} :\n` +  formatted);
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
-  }
+  });
+
 });
 
 
