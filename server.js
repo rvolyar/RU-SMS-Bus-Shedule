@@ -13,9 +13,6 @@ const MessagingResponse = twilio.twiml.MessagingResponse;
 const sid = process.env.SID;
 const token = process.env.TOKEN;
 
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
-
 // busName: String
 // callback: (Exception, Object) => void
 const rutgersRouteConfigURL = 'https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt';
@@ -32,7 +29,7 @@ const busRequest = (busName, callback) => {
     }
 
     rutgers.setAgencyCache(JSON.parse(body), 'rutgers');
-    rutgers.routePredict(busName.toLowerCase(), null, callback, 'minutes');
+    rutgers.routePredict((busName.toLowerCase()).replace(/\s/g, ''), null, callback, 'minutes');
   });
 }
 
@@ -47,20 +44,33 @@ app.post('/message', function(req, res) {
   busRequest(busName, (err, data) => {
     if (err) {
       console.log(err);
+      if (err.name == 'noroute') {
+        twiml.message(`Invalid Bus Name. Valid bus names: \n` + "a, b, c, ee, f, h, lx, rexb, rexl, s, w1, wknd1, wknd2, rbhs");
+        res.writeHead(200, { 'Content-Type': 'text/xml' });
+        res.end(twiml.toString());
+      }
       return;
     }
     console.log("Message was " + busName);
     console.log(data);
-    let formatted ="";
-    for(var i in data){
-      formatted+=data[i].title + '\n';
-      for(var x in data[i].predictions){
-        formatted +=data[i].predictions[x] + ",";
+
+    if (data[0].predictions == null) {
+      twiml.message(`Bus ${busName} Is NOT in service`);
+      res.writeHead(200, { 'Content-Type': 'text/xml' });
+      res.end(twiml.toString());
+      return;
+    }
+    let formatted = "";
+    for (var i in data) {
+      formatted += data[i].title + '\n';
+      for (var x in data[i].predictions) {
+        formatted += data[i].predictions[x] + ", "; //print minutes
       }
-       formatted+="\n";
+      formatted = formatted.replace(/,\s*$/, ""); //remove last comma
+      formatted += "\n";
     }
     console.log(formatted);
-    twiml.message(`Bus ${busName} :\n` +  formatted);
+    twiml.message(`Bus ${busName} :\n` + formatted);
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
   });
