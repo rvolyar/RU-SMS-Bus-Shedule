@@ -16,21 +16,21 @@ const token = process.env.TOKEN;
 // busName: String
 // callback: (Exception, Object) => void
 const rutgersRouteConfigURL = 'https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt';
+
+request(rutgersRouteConfigURL, (error, response, body) => {
+  if (error) {
+    console.log('error:', error);
+    return;
+  }
+
+  if (response.statusCode) {
+    //console.log('statusCode:', response);
+  }
+
+  rutgers.setAgencyCache(JSON.parse(body), 'rutgers'); //only done at the start
+});
 const busRequest = (busName, callback) => {
-
-  request(rutgersRouteConfigURL, (error, response, body) => {
-    if (error) {
-      console.log('error:', error);
-      return;
-    }
-
-    if (response.statusCode) {
-      //console.log('statusCode:', response);
-    }
-
-    rutgers.setAgencyCache(JSON.parse(body), 'rutgers');
-    rutgers.routePredict((busName.toLowerCase()).replace(/\s/g, ''), null, callback, 'minutes');
-  });
+  rutgers.routePredict((busName.toLowerCase()).replace(/\s/g, ''), null, callback, 'minutes');
 }
 
 console.log("hi! Your app is running!");
