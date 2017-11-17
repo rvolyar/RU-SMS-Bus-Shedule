@@ -37,6 +37,11 @@ console.log("hi! Your app is running!");
 
 const app = express();
 app.use(bodyParser());
+
+app.get('/', (req, res) => {
+  res.send('HEY!')
+})
+
 app.post('/message', function(req, res) {
   const twiml = new MessagingResponse();
 
@@ -78,4 +83,4 @@ app.post('/message', function(req, res) {
 });
 
 
-http.createServer(app).listen(process.env.PORT, process.env.IP);
+http.createServer(app).listen(80, '34.210.46.226');
