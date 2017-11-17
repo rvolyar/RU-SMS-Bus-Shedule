@@ -83,4 +83,4 @@ app.post('/message', function(req, res) {
 });
 
 
-http.createServer(app).listen(80, '34.210.46.226');
+http.createServer(app).listen(80);
