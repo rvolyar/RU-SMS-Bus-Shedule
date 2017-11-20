@@ -10,8 +10,8 @@ require('dotenv').config();
 
 const MessagingResponse = twilio.twiml.MessagingResponse;
 
-const sid = process.env.SID;
-const token = process.env.TOKEN;
+const ip = process.env.IP;
+const port = process.env.PORT;
 
 // busName: String
 // callback: (Exception, Object) => void
@@ -83,4 +83,4 @@ app.post('/message', function(req, res) {
 });
 
 
-http.createServer(app).listen(80);
+http.createServer(app).listen(port,ip);
