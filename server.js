@@ -2,41 +2,45 @@
 
 const http = require("http");
 const express = require("express");
-const bodyParser = require("body-parser");
-const request = require("request");
+const fetch = require("node-fetch");
 const twilio = require("twilio");
-const rutgers = require('nextbusjs').client();
-require('dotenv').config();
+const rutgers = require("nextbusjs").client();
+require("dotenv").config();
 
 const MessagingResponse = twilio.twiml.MessagingResponse;
 
-const ip = process.env.IP;
-const port = process.env.PORT;
+const ip = process.env.IP || "0.0.0.0";
+const port = process.env.PORT || 3000;
 
 // busName: String
 // callback: (Exception, Object) => void
-const rutgersRouteConfigURL = 'https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt';
+const rutgersRouteConfigURL = "https://rumobile.rutgers.edu/1/rutgersrouteconfig.txt";
 
-request(rutgersRouteConfigURL, (error, response, body) => {
-  if (error) {
-    console.log('error:', error);
-    return;
+const loadRutgersConfig = async () => {
+  try {
+    const response = await fetch(rutgersRouteConfigURL);
+    if (!response.ok) {
+      console.error(`Failed to load Rutgers route config: ${response.status} ${response.statusText}`);
+      return;
+    }
+    const body = await response.text();
+    rutgers.setAgencyCache(JSON.parse(body), "rutgers"); // only done at the start
+  } catch (error) {
+    console.error("Error loading Rutgers route config:", error);
   }
+};
 
-  if (response.statusCode) {
-    //console.log('statusCode:', response);
-  }
+loadRutgersConfig();
 
-  rutgers.setAgencyCache(JSON.parse(body), 'rutgers'); //only done at the start
-});
 const busRequest = (busName, callback) => {
-  rutgers.routePredict((busName.toLowerCase()).replace(/\s/g, ''), null, callback, 'minutes');
-}
+  rutgers.routePredict(busName.toLowerCase().replace(/\s/g, ""), null, callback, "minutes");
+};
 
 console.log("hi! Your app is running!");
 
 const app = express();
-app.use(bodyParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
   res.send('HEY!')
@@ -45,42 +49,46 @@ app.get('/', (req, res) => {
 app.post('/message', function(req, res) {
   const twiml = new MessagingResponse();
 
-  const busName = req.body.Body;
+  const busName = typeof req.body.Body === "string" ? req.body.Body.trim() : "";
+  if (!busName) {
+    twiml.message("Please send a bus name (e.g., LX, A, B).");
+    return res.type("text/xml").send(twiml.toString());
+  }
+
   busRequest(busName, (err, data) => {
     if (err) {
       console.log(err);
-      if (err.name == 'noroute') {
-        twiml.message(`Invalid Bus Name. Valid bus names: \n` + "a, b, c, ee, f, h, lx, rexb, rexl, s, w1, wknd1, wknd2, rbhs");
-        res.writeHead(200, { 'Content-Type': 'text/xml' });
-        res.end(twiml.toString());
+      if (err.name === "noroute") {
+        twiml.message(
+          `Invalid Bus Name. Valid bus names: \n` +
+            "a, b, c, ee, f, h, lx, rexb, rexl, s, w1, wknd1, wknd2, rbhs"
+        );
+        return res.type("text/xml").send(twiml.toString());
       }
       return;
     }
     console.log("Message was " + busName);
     console.log(data);
 
-    if (data[0].predictions == null) {
-      twiml.message(`Bus ${busName} Is NOT in service`);
-      res.writeHead(200, { 'Content-Type': 'text/xml' });
-      res.end(twiml.toString());
-      return;
+    if (!Array.isArray(data) || data.length === 0) {
+      twiml.message(`No prediction data available for ${busName}.`);
+      return res.type("text/xml").send(twiml.toString());
     }
-    let formatted = "";
-    for (var i in data) {
-      formatted += data[i].title + '\n';
-      for (var x in data[i].predictions) {
-        formatted += data[i].predictions[x] + ", "; //print minutes
-      }
-      formatted = formatted.replace(/,\s*$/, ""); //remove last comma
-      formatted += "\n";
-    }
+    const formatted = data
+      .map((route) => {
+        if (!route.predictions || route.predictions.length === 0) {
+          return `${route.title}\nNo arrivals listed.`;
+        }
+        return `${route.title}\n${route.predictions.join(", ")}`;
+      })
+      .join("\n");
+
     console.log(formatted);
     twiml.message(`Bus ${busName} :\n` + formatted);
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
+    return res.type("text/xml").send(twiml.toString());
   });
 
 });
 
 
-http.createServer(app).listen(port,ip);
+http.createServer(app).listen(port, ip);
